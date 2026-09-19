@@ -13,7 +13,7 @@ import { PROJECTS_DIR, DB_PATH, JETON_YOLU, VERI_DIZINI, veriDizini } from './pa
 import { ayarlariOku, AYAR_YOLU } from './config.js';
 import { kanalKur, kararlarTelegramaDa } from './kanallar.js';
 import { Bildirimci } from './bildirim.js';
-import { kadroCikar } from './kisilik.js';
+import { kadroCikar, kimlikCoz } from './kisilik.js';
 import { Kuyruk } from './kuyruk.js';
 import { isEkle, isListesi, isSil, kosular, hayaletleriKapat, isGetir, yetimIcIsleriSil } from './isler.js';
 import { kararlariTazele, bekleyenKararlar, kararKarti, cevapla, iptalEt, kabulEt, kapsamGenislet, planUygula } from './eskalasyon.js';
@@ -373,12 +373,20 @@ async function tara() {
   const suruKosusu = new Map();
   try {
     const kimlikler = JSON.stringify(anlik.map((x) => x.sessionId));
-    for (const r of db.prepare(`SELECT session_id, is_id FROM kosular
-        WHERE session_id IN (SELECT value FROM json_each(?))`).all(kimlikler)) {
-      suruKosusu.set(r.session_id, r.is_id);
+    for (const r of db.prepare(`SELECT k.session_id, k.is_id, i.ad is_ad FROM kosular k LEFT JOIN isler i ON i.id = k.is_id
+        WHERE k.session_id IN (SELECT value FROM json_each(?))`).all(kimlikler)) {
+      suruKosusu.set(r.session_id, { isId: r.is_id, isAd: r.is_ad ?? null });
     }
   } catch { /* eslesme kurulamadi: oturumlar yine gorunur, sadece ikilenebilir */ }
-  const cikti = anlik.map((x) => kucult(x, kadro.get(x.sessionId), suruKosusu.get(x.sessionId)))
+  // Ad gorevden: Suru'nun kosturdugu oturumda is adi, elle acilmis oturumda baslik.
+  // Ikisi de yoksa kadro adi (cakisma eki ile) - eski davranis.
+  const kimlikSec = (x) => {
+    const is = suruKosusu.get(x.sessionId);
+    if (is?.isAd) return kimlikCoz(db, { isId: is.isId, sessionId: x.sessionId, isAd: is.isAd });
+    if (x.baslik && String(x.baslik).trim()) return kimlikCoz(db, { sessionId: x.sessionId, baslik: x.baslik });
+    return kadro.get(x.sessionId);
+  };
+  const cikti = anlik.map((x) => kucult(x, kimlikSec(x), suruKosusu.get(x.sessionId)?.isId ?? null))
     .sort((a, b) => (ONCELIK[a.d] ?? 9) - (ONCELIK[b.d] ?? 9) || b.z - a.z);
 
   const yeni = JSON.stringify(cikti);

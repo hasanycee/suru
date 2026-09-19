@@ -11,7 +11,7 @@
 import { basename } from 'node:path';
 import { bekleyenKararlar, kararKarti, cevapla, iptalEt, kabulEt, kapsamGenislet, planUygula } from './eskalasyon.js';
 import { isListesi, isGetir, isEkle, isSil, acikKosular, kosuGetir, KOSU_DURUMU } from './isler.js';
-import { ajanKimligi } from './kisilik.js';
+import { kimlikCoz } from './kisilik.js';
 import { insanOlgusu, insanOlgusuSil, kayitlar as hafizaKayitlari, HAFIZA_TURU, KAYNAK } from './hafiza.js';
 import { profilAl } from './yetki.js';
 import { kosuListesi, kosuAyrintisi } from './komuta.js';
@@ -176,8 +176,8 @@ export function durumMetni(db, kuyruk, { simdi = Date.now() } = {}) {
   satir.push('Sürü: ' + q.calisan + ' calisiyor, ' + q.bekleyen + ' bekliyor (sinir ' + q.esZamanli + ')');
   for (const k of acik) {
     const is = isGetir(db, k.isId);
-    const kim = ajanKimligi({ isId: k.isId, sessionId: k.sessionId });
-    satir.push('  ' + kim.simge + ' ' + kim.ad + ' · ' + (is?.ad ?? '?') + ' · ' + k.durum
+    const kim = kimlikCoz(db, { isId: k.isId, sessionId: k.sessionId, isAd: is?.ad ?? null });
+    satir.push('  ' + kim.simge + ' ' + kim.ad + ' · ' + k.durum
       + (k.durum === KOSU_DURUMU.CALISIYOR ? ' ' + sure(simdi - k.basladi) : '') + '  [' + kisa(k.id) + ']');
   }
   const kararlar = bekleyenKararlar(db);

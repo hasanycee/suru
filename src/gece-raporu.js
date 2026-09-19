@@ -7,7 +7,7 @@
 // "hicbir sey olmadi" ile "rapor uretilemedi" ayni sey degil.
 
 import { OLAY, aralik } from './events.js';
-import { ajanKimligi } from './kisilik.js';
+import { kimlikCoz } from './kisilik.js';
 import { KOSU_DURUMU } from './isler.js';
 import { degerlendir as kotaDegerlendir } from './kota.js';
 
@@ -65,7 +65,7 @@ export function ozet(db, ayarlar, { baslangic, bitis = Date.now() } = {}) {
       .map(([arac, adet]) => ({ arac, adet })),
     // Her kosu icin tek satirlik ozet - ajanin kendi agzindan sonucu.
     satirlar: kosular.map((k) => ({
-      ajan: ajanKimligi({ isId: k.is_id, sessionId: k.session_id }),
+      ajan: kimlikCoz(db, { isId: k.is_id, sessionId: k.session_id, isAd: k.is_ad ?? null }),
       is: k.is_ad ?? '(silinmis is)',
       durum: k.durum,
       usd: Number(k.usd || 0),

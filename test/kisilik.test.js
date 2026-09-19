@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { kisilik, kadroCikar, ajanKimligi, kimlikAnahtari, KADRO_BOYU } from '../src/kisilik.js';
+import { kisilik, kadroCikar, ajanKimligi, kimlikAnahtari, gorevEtiketi, basligiAnlamli, KADRO_BOYU } from '../src/kisilik.js';
 
 test('ayni oturum her zaman ayni kimligi alir', () => {
   const a = kisilik('a3f9b2c1-0000-0000-0000-000000000001');
@@ -65,4 +65,40 @@ test('is yoksa oturum kimligi kullanilir', () => {
   assert.equal(kimlikAnahtari({ sessionId: 'o1' }), 'o1');
   assert.equal(kimlikAnahtari({ isId: 'i1', sessionId: 'o1' }), 'i1');
   assert.deepEqual(ajanKimligi({ sessionId: 'o1' }), kisilik('o1'));
+});
+
+// --- Gorev etiketi: ad isten gelir ---
+
+test('is adi varsa ajan adi gorev etiketi olur, kadro adi takmaya iner', () => {
+  const k = ajanKimligi({ isId: 'is-1', isAd: 'livedub-test-kapsami' });
+  assert.equal(k.ad, 'Livedub test kapsami');
+  assert.equal(k.takma, kisilik('is-1').ad);
+  assert.equal(k.simge, kisilik('is-1').simge, 'simge ve renk kadrodan kalir');
+});
+
+test('denetci ve damitma isleri rolunu ve hedefini soyler', () => {
+  assert.equal(ajanKimligi({ isId: 'd', isAd: '_denetci:abc', hedefAd: 'fin-logic-saglamlastir' }).ad,
+    'Denetçi · Fin logic saglamlastir');
+  assert.equal(ajanKimligi({ isId: 'd', isAd: '_damitma:livedub' }).ad, 'Damıtma · livedub');
+});
+
+test('is yoksa oturum basligi, o da yoksa kadro adi', () => {
+  const uzun = 'Profil README ve repo aciklamalarini iki dilde yeniden yaz';
+  const k = ajanKimligi({ sessionId: 'o1', baslik: uzun });
+  assert.ok(k.ad.length <= 34 && k.ad.endsWith('…'), 'uzun baslik kirpilir: ' + k.ad);
+  assert.equal(ajanKimligi({ sessionId: 'o1', baslik: '  ' }).ad, kisilik('o1').ad);
+});
+
+test('gorevEtiketi: etiket yoksa null', () => {
+  assert.equal(gorevEtiketi({}), null);
+  assert.equal(gorevEtiketi({ isAd: 'a_b-c' }), 'A b c');
+});
+
+test('selamlasma ya da cok kisa baslik etiket olmaz, kadro adina dusulur', () => {
+  // Saha: oturum basligi ilk mesajdan geliyor; panelde yedi tane "Selam" gorunmustu.
+  for (const b of ['Selam', 'merhaba kanka nasilsin', 'devam', 'Hello there, quick question']) {
+    assert.equal(basligiAnlamli(b), false, b);
+    assert.equal(ajanKimligi({ sessionId: 'o9', baslik: b }).ad, kisilik('o9').ad, b);
+  }
+  assert.equal(basligiAnlamli('Proje analizi ve uygulanmasi'), true);
 });

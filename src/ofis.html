@@ -172,6 +172,16 @@ function kisaProje(yol){
   return parca[parca.length-1]||t||'?';
 }
 
+// Masa etiketi: ajan zaten projenin odasinda, adin basindaki proje adi bilgi tasimaz.
+// 'Livedub test kapsami' -> LIVEDUB odasinda 'Test kapsami'. Masa 14 karakter gosterir.
+function odaAdi(ad, proje){
+  var a=String(ad||''), p=String(proje||'').toLowerCase().replace(/[-_]+/g,' ');
+  if(p && a.toLowerCase().indexOf(p+' ')===0){
+    var r=a.slice(p.length+1); return r? r.charAt(0).toUpperCase()+r.slice(1) : a;
+  }
+  return a;
+}
+
 function hash(s){ var h=0; for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0; return Math.abs(h); }
 
 /* ---------- Yerlesim ----------
@@ -351,7 +361,7 @@ function yenile(){
       else if(son&&son.durum==='calisiyor')d='calisiyor';
       else if(son&&son.durum==='bekliyor')d='kuyrukta';
       else if(son&&son.durum==='karar-bekliyor')d='karar';
-      gelen['i:'+w.id]={ad:k.ajan.ad, simge:k.ajan.simge||'', hue:k.ajan.hue==null?200:k.ajan.hue,
+      gelen['i:'+w.id]={ad:odaAdi(k.ajan.ad, kisaProje(w.cwd)), simge:k.ajan.simge||'', hue:k.ajan.hue==null?200:k.ajan.hue,
         // Calisirken ne yaptigi, isin canli oturumundan gelir.
         durum:d, arac:(d==='calisiyor'&&suruOturumu[w.id])?(suruOturumu[w.id].a||null):null,
         proje:kisaProje(w.cwd), nerede:w.ad+' · '+w.profil,

@@ -8,7 +8,7 @@
 
 import { basename } from 'node:path';
 import { kosuGetir, isGetir, KOSU_DURUMU } from './isler.js';
-import { ajanKimligi } from './kisilik.js';
+import { kimlikCoz } from './kisilik.js';
 
 const para = (u) => '$' + Number(u ?? 0).toFixed(2);
 const sure = (ms) => {
@@ -44,7 +44,7 @@ export function bittiMesaji(db, { kosuId }) {
   const son = db.prepare('SELECT * FROM kosular WHERE is_id = ? ORDER BY basladi DESC LIMIT 1').get(is.id);
   if (!son) return null;
   if (son.durum === KOSU_DURUMU.KARAR_BEKLIYOR) return null;
-  const kim = ajanKimligi({ isId: is.id, sessionId: son.session_id });
+  const kim = kimlikCoz(db, { isId: is.id, sessionId: son.session_id, isAd: is.ad });
   const toplam = db.prepare(`SELECT COALESCE(SUM(k.usd),0) usd, COUNT(*) n FROM kosular k JOIN isler i ON i.id = k.is_id
     WHERE (i.id = ? OR i.ad = ?) AND k.basladi >= ?`).get(is.id, '_denetci:' + is.id, son.basladi - 12 * 3600_000);
   const durum = son.durum === KOSU_DURUMU.BITTI ? (kosu.rol === 'denetci' || isKaydi.id !== is.id ? 'bitti, denetimden gecti' : 'bitti')

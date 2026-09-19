@@ -87,9 +87,80 @@ export function kimlikAnahtari({ isId = null, sessionId = null } = {}) {
   return isId || sessionId || '';
 }
 
-/** Bir kosu/karar/olay icin dogru kimlik. */
-export function ajanKimligi(kaynak, secenekler) {
-  return kisilik(kimlikAnahtari(kaynak), secenekler);
+/**
+ * Gorev etiketi: ajanin adi yaptigi isten gelsin.
+ *
+ * Kadro adi (Kekik, Vasak...) rastgele; panelde "Vasak seni bekliyor" gorunce
+ * hangi is oldugunu hatirlamak icin ikinci bir bakis gerekiyordu. Etiket
+ * dogrudan isten: is adi varsa ondan, yoksa oturum basligindan. Kadro adi
+ * `takma` olarak kalir (simge ve renk zaten oradan).
+ *
+ *   'livedub-test-kapsami'  -> 'Livedub test kapsami'
+ *   '_denetci:<id>'          -> 'Denetçi · <hedef isin etiketi>'
+ *   '_damitma:livedub'       -> 'Damıtma · livedub'
+ *   (is yok, baslik var)     -> baslik, 34 karaktere kirpilmis
+ */
+const ETIKET_EN = 34;
+
+function slugAc(s) {
+  const t = String(s ?? '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+}
+
+function kirp(s, n = ETIKET_EN) {
+  const t = String(s ?? '').replace(/\s+/g, ' ').trim();
+  return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t;
+}
+
+export function gorevEtiketi({ isAd = null, hedefAd = null, baslik = null } = {}) {
+  const ad = String(isAd ?? '');
+  if (ad) {
+    const m = /^_denetci:(.+)$/.exec(ad);
+    if (m) return 'Denetçi · ' + (hedefAd ? kirp(slugAc(hedefAd), ETIKET_EN - 10) : m[1].slice(0, 6));
+    if (ad.startsWith('_damitma:')) return 'Damıtma · ' + kirp(ad.slice('_damitma:'.length), ETIKET_EN - 10);
+    return kirp(slugAc(ad));
+  }
+  if (basligiAnlamli(baslik)) return kirp(baslik);
+  return null;
+}
+
+/**
+ * Oturum basligi cogu zaman ilk mesajdan turetiliyor: "selam", "merhaba",
+ * "devam" gibi bir baslik isi anlatmaz, kadro adindan daha kotu bir etikettir.
+ * Kisa ya da selamlasma olan basliklar yok sayilir.
+ */
+const SELAM = /^(selam|merhaba|mrb|hey|hi|hello|kanka|abi|devam|test|deneme|naber|nasilsin|nasılsın)\b/i;
+export function basligiAnlamli(baslik) {
+  const t = String(baslik ?? '').replace(/\s+/g, ' ').trim();
+  if (t.length < 12) return false;
+  return !SELAM.test(t);
+}
+
+/**
+ * Bir kosu/karar/olay icin dogru kimlik.
+ * kaynak.isAd / hedefAd / baslik verilirse ad gorev etiketi olur, kadro adi
+ * `takma`ya iner. Verilmezse eski davranis: kadro kimligi oldugu gibi.
+ */
+export function ajanKimligi(kaynak = {}, secenekler) {
+  const k = kisilik(kimlikAnahtari(kaynak), secenekler);
+  const etiket = gorevEtiketi(kaynak);
+  return etiket ? { ...k, ad: etiket, takma: k.ad } : k;
+}
+
+/**
+ * Veritabanindan bakarak kimlik: is adi (denetci ise hedef isin adi) ve
+ * oturum basligi cozulur, sonra ajanKimligi. Sorgular kucuk; cagiran
+ * tarafta zaten is/oturum satiri varsa isAd/baslik dogrudan verilebilir.
+ */
+export function kimlikCoz(db, { isId = null, sessionId = null, isAd = null, baslik = null } = {}, secenekler) {
+  let ad = isAd, hedefAd = null, b = baslik;
+  try {
+    if (isId && !ad) ad = db.prepare('SELECT ad FROM isler WHERE id = ?').get(isId)?.ad ?? null;
+    const m = ad ? /^_denetci:(.+)$/.exec(ad) : null;
+    if (m) hedefAd = db.prepare('SELECT ad FROM isler WHERE id = ?').get(m[1])?.ad ?? null;
+    if (!ad && !b && sessionId) b = db.prepare('SELECT title FROM sessions WHERE session_id = ?').get(sessionId)?.title ?? null;
+  } catch { /* tablo yoksa (eski sema / test) kadro kimligine dus */ }
+  return ajanKimligi({ isId, sessionId, isAd: ad, hedefAd, baslik: b }, secenekler);
 }
 
 export const KADRO_BOYU = KADRO.length;

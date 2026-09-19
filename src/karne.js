@@ -7,7 +7,7 @@
 // Kimlik ISTEN gelir (bkz. kisilik.js): ayni is hep ayni ajan gorunur, boylece
 // karne birikebilir.
 
-import { ajanKimligi } from './kisilik.js';
+import { kimlikCoz } from './kisilik.js';
 import { KOSU_DURUMU } from './isler.js';
 
 /** Basarili sayilan bitis durumlari. Karar bekleyen ne basari ne basarisizlik. */
@@ -99,7 +99,7 @@ export function isKarnesi(db, isId) {
     db.prepare('SELECT COUNT(*) n FROM kararlar WHERE is_id = ?').get(isId)?.n ?? 0);
 
   const k = karneHesapla(satirlar, { isId, kararSayisi });
-  k.ajan = ajanKimligi({ isId });
+  k.ajan = kimlikCoz(db, { isId, isAd: is?.ad ?? null });
   k.is = is ? { ad: is.ad, profil: is.profil, model: is.model } : null;
   return k;
 }

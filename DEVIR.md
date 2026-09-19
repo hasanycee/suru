@@ -175,3 +175,13 @@ Kota tavanı kullanıcı kararıyla 300 yapıldı. Kullanıcıya açık kalanlar
 Unity MCP canlı denemesi (Unity'de ogrenme KOPYASI açıkken gözlemci profil + `mcp: unity-mcp` işi; ilk koşuda
 `init.tools`'a bakıp `ayarlar.json > mcp.okur` kataloğunu düzelt), mikrofon isabeti (20 cümle), bağlam eşiği (uzun koşu görülünce).
 Yeni tuzak: canlı talimat `result`'a çok yakın gidince CLI ikinci init+result üretiyor; maliyet `max` ile tek sayılıyor.
+
+## 11. Ajan adlandırması (2026-09-19)
+
+Kullanıcı isteği: panelde rastgele kadro adı (Kandil, Vasak) yerine ajanın *işini* söyleyen ad.
+- `kisilik.js`: `gorevEtiketi()` + `ajanKimligi({isAd, hedefAd, baslik})` + `kimlikCoz(db, …)` (DB'den iş adı / denetçi hedefi / oturum başlığı çözer).
+- Bütün tüketiciler (`bildirim`, `eskalasyon`, `karne`, `komut`, `komuta`, `gece-raporu`, `cakisma`, `server`) `kimlikCoz` kullanıyor. `kisilik()` ve `kadroCikar()` değişmedi; simge/renk hâlâ oradan.
+- `basligiAnlamli()`: 12 karakterden kısa ya da "selam/merhaba/devam…" ile başlayan oturum başlığı etiket olmaz — sahada yedi oturum "Selam" çıkmıştı.
+- Ofis masa etiketi (`ofis.html` `odaAdi`): ajan zaten projenin odasında, adın başındaki proje adı atılır ("Livedub test kapsami" → "Test kapsami"). Masa 14 karakter gösteriyor.
+- Komuta ekranında `ajan · iş` tekrarı kaldırıldı (ad zaten iş).
+- Test: 404 geçiyor. Canlı: panel + ofis ekran görüntüleri `docs/` altında yenilendi.

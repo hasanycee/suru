@@ -34,7 +34,7 @@ Jeton `~/.claude/suru/token` dosyasında saklanıyor, yani adres sabit.
 |---|---|
 | `paths.js` | Bütün kalıcı veri yolları tek yerde |
 | `config.js` | Kullanıcı ayarları (`~/.claude/suru/ayarlar.json`) |
-| `kisilik.js` | Ajan kimliği: ad, simge, renk — oturum kimliğinden hesaplanır |
+| `kisilik.js` | Ajan kimliği. **Ad görevden gelir**: iş adı (`livedub-test-kapsami` → "Livedub test kapsami", denetçi/damıtma rolü önekli), iş yoksa oturum başlığı; selamlaşma gibi anlamsız başlıklarda kadro adı (Kekik, Vasak…). Simge ve renk her zaman kadrodan, iş/oturum kimliğinden hesaplanır |
 | `bildirim.js` | Bildirim karar motoru (saf) + akış tüketicisi |
 | `kanallar.js` | Bildirim kanalları: yerel günlük, ntfy, webhook |
 | `yetki.js` | **Yetki profilleri** — bir ajanın ne yapabileceği ve ne zaman soracağı |

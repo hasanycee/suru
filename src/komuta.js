@@ -10,7 +10,7 @@ import { basename } from 'node:path';
 import { OLAY, oku as olayOku, sonSeq } from './events.js';
 import { isGetir } from './isler.js';
 import { bekleyenKararlar, kararKarti } from './eskalasyon.js';
-import { ajanKimligi } from './kisilik.js';
+import { kimlikCoz } from './kisilik.js';
 import { anlat } from './anlati.js';
 
 const ACIK = ['bekliyor', 'calisiyor', 'karar-bekliyor'];
@@ -37,7 +37,7 @@ export function kosuListesi(db, { simdi = Date.now(), pencereMs = 6 * 3600_000, 
                COALESCE(k.bitti, k.basladi) DESC LIMIT ?`).all(simdi - pencereMs, enFazla);
   return satirlar.map((r) => {
     const is = isGetir(db, r.is_id);
-    const kim = ajanKimligi({ isId: r.is_id, sessionId: r.session_id });
+    const kim = kimlikCoz(db, { isId: r.is_id, sessionId: r.session_id, isAd: is?.ad ?? null });
     return {
       id: r.id, oturum: r.session_id, durum: r.durum, canli: ACIK.includes(r.durum),
       basladi: r.basladi, bitti: r.bitti ?? null, usd: r.usd ?? 0, model: r.model ?? is?.model ?? null,

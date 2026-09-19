@@ -11,7 +11,7 @@
 import { randomUUID } from 'node:crypto';
 import { OLAY, yaz as olayYaz } from './events.js';
 import { kosuAc, kosuGetir, isGetir, KOSU_DURUMU } from './isler.js';
-import { ajanKimligi } from './kisilik.js';
+import { kimlikCoz } from './kisilik.js';
 import { profilAl } from './yetki.js';
 
 const NL = String.fromCharCode(10);
@@ -328,7 +328,7 @@ export function planUygula(db, kararId) {
 export function kararKarti(db, karar) {
   const is = isGetir(db, karar.isId);
   // Kimlik isten: ayni is hep ayni ajan tarafindan yapiliyormus gibi gorunsun.
-  const k = ajanKimligi({ isId: karar.isId, sessionId: karar.sessionId });
+  const k = kimlikCoz(db, { isId: karar.isId, sessionId: karar.sessionId, isAd: is?.ad ?? null });
   return {
     id: karar.id,
     tur: karar.tur,

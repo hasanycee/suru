@@ -10,7 +10,7 @@
 
 import { OLAY, oku as olayOku, yaz as olayYaz } from './events.js';
 import { kvOku, kvYaz } from './db.js';
-import { kisilik, ajanKimligi } from './kisilik.js';
+import { ajanKimligi, kimlikCoz } from './kisilik.js';
 
 const IMLEC = 'bildirim.imlec';
 
@@ -44,7 +44,9 @@ export function sessizMi(simdi, pencere) {
  * sonGonderim : Map<'oturum:durum', zaman> - soguma icin
  * Doner: { gonderilecek: [...], ozet: {...}|null, sonGonderim: guncellenmis Map }
  */
-export function kararVer(olaylar, { ayarlar, sonGonderim = new Map(), simdi = Date.now() } = {}) {
+export function kararVer(olaylar, { ayarlar, sonGonderim = new Map(), simdi = Date.now(),
+  // Kimlik cozucu: sunucu veritabanindan gorev etiketi verir; saf testlerde kadro kimligi.
+  kimlik = (o) => ajanKimligi({ isId: o.data?.isId, sessionId: o.sessionId }) } = {}) {
   const a = ayarlar.bildirim;
   const sogumaMs = a.sogumaDk * 60_000;
   const sessiz = sessizMi(simdi, a.sessizSaatler);
@@ -59,7 +61,7 @@ export function kararVer(olaylar, { ayarlar, sonGonderim = new Map(), simdi = Da
       const once = yeniSon.get(anahtar);
       if (once != null && simdi - once < sogumaMs) continue;
       yeniSon.set(anahtar, simdi);
-      const k = ajanKimligi({ isId: o.data?.isId, sessionId: o.sessionId });
+      const k = kimlik(o);
       gonderilecek.push({
         seq: o.seq, at: o.at, sessionId: o.sessionId, durum: 'karar', onem: 'acil',
         // Kanal dugme kurabilsin diye (Telegram): karari tek dokunusla cevaplamak.
@@ -85,7 +87,7 @@ export function kararVer(olaylar, { ayarlar, sonGonderim = new Map(), simdi = Da
     if (once != null && simdi - once < sogumaMs) continue;
     yeniSon.set(anahtar, simdi);
 
-    const k = kisilik(o.sessionId);
+    const k = kimlik(o);
     const govdeParcalari = [ETIKET[durum] ?? durum];
     if (o.data?.arac) govdeParcalari.push('arac: ' + o.data.arac);
     if (o.data?.kesin === false && (durum === 'onay-bekliyor' || durum === 'takildi')) {
@@ -159,6 +161,7 @@ export class Bildirimci {
     const simdi = this.simdi();
     const { gonderilecek, ozet, sonGonderim } = kararVer(olaylar, {
       ayarlar: this.ayarlar, sonGonderim: this.sonGonderim, simdi,
+      kimlik: (o) => kimlikCoz(this.db, { isId: o.data?.isId, sessionId: o.sessionId }),
     });
     this.sonGonderim = sonGonderim;
 

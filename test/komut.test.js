@@ -150,7 +150,7 @@ test('/not projeye insan olgusu yazar; /durum calisan kosuyu ve karar sayisini g
     kararAc(o.db, is.id);
     const d = komutCalistir('/durum', o.ctx).metin;
     assert.match(d, /Sürü: 1 calisiyor, 0 bekliyor \(sinir 3\)/);
-    assert.match(d, /· A · calisiyor 1 dk  \[/);
+    assert.match(d, / A · calisiyor 1 dk  \[/); // ajan adi isten: 'A'
     assert.match(d, /1 acik karar: \/kararlar/);
   } finally { o.temizle(); }
 });

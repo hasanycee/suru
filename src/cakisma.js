@@ -10,7 +10,7 @@
 
 import { OLAY, yaz as olayYaz } from './events.js';
 import { KOSU_DURUMU } from './isler.js';
-import { kisilik } from './kisilik.js';
+import { kimlikCoz } from './kisilik.js';
 
 const SEP = String.fromCharCode(92);
 
@@ -54,7 +54,7 @@ export function cakisanlar(db, is, { hariçKosuId = null } = {}) {
   for (const r of satirlar) {
     if (hariçKosuId && r.kosu_id === hariçKosuId) continue;
     if (!cakisirMi(is, { cwd: r.cwd })) continue;
-    const k = kisilik(r.session_id);
+    const k = kimlikCoz(db, { isId: r.is_id, sessionId: r.session_id, isAd: r.ad });
     out.push({
       kosuId: r.kosu_id, isId: r.is_id, isAd: r.ad, cwd: r.cwd,
       ajan: { ad: k.ad, simge: k.simge },

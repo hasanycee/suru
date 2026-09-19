@@ -303,7 +303,7 @@ function satirEl(s,kimlikli){
   d.appendChild(el('span','z',saat(s.at)));
   if(kimlikli){
     var k=kosular[s.kosu]||oturumdanKosu(s.oturum);
-    d.appendChild(el('span','kim',k?(k.ajan.simge+' '+k.ajan.ad+' · '+(k.is?k.is.ad:'?')):(s.proje||'sürü')));
+    d.appendChild(el('span','kim',k?(k.ajan.simge+' '+k.ajan.ad):(s.proje||'sürü')));
   }
   d.appendChild(el('span','m',s.metin));
   return d;
@@ -347,7 +347,7 @@ function bekleyenleriCiz(){
   kap.className=disarda.length?'var':'';
   disarda.forEach(function(id){
     var k=kosular[id], b=el('button','cip '+k.durum); b.type='button';
-    b.appendChild(el('b',null,k.ajan.simge+' '+k.ajan.ad)); b.appendChild(document.createTextNode(' · '+(k.is?k.is.ad:'?')+' · '+(DURUM[k.durum]||k.durum)));
+    b.appendChild(el('b',null,k.ajan.simge+' '+k.ajan.ad)); b.appendChild(document.createTextNode(' · '+(DURUM[k.durum]||k.durum)));
     b.title='masaya çağır'; b.onclick=function(){ masayaCagir(id); };
     kap.appendChild(b);
   });
@@ -522,7 +522,7 @@ function satirIsle(s){
   if(s.ses)cal(s.ses);
   var k=kosular[s.kosu]||oturumdanKosu(s.oturum);
   if(s.ses)konus(konusMetni(s,k),k);
-  if(s.ses==='karar'||s.ses==='hata')bildir((k?k.ajan.simge+' '+k.ajan.ad:'Sürü')+(k&&k.is?' · '+k.is.ad:''),s.metin);
+  if(s.ses==='karar'||s.ses==='hata')bildir((k?k.ajan.simge+' '+k.ajan.ad:'Sürü'),s.metin);
   if(k){
     k.satirlar.push(s); if(k.satirlar.length>200)k.satirlar.shift();
     if(s.ton==='arac')k.aracCanli=(k.aracCanli!=null?k.aracCanli:(k.aracSayisi||0))+1;

@@ -132,8 +132,9 @@ test('is karnesi kimligi ISTEN alir', () => {
   assert.equal(k.kosu, 2);
   assert.equal(k.basarili, 2);
   assert.equal(k.is.ad, 'gece');
-  // Oturumlar farkli ama ajan ayni olmali - karne ancak boyle birikir.
-  assert.deepEqual(k.ajan, ajanKimligi({ isId: is.id }));
+  // Oturumlar farkli ama ajan ayni olmali - karne ancak boyle birikir. Ad isten gelir.
+  assert.deepEqual(k.ajan, ajanKimligi({ isId: is.id, isAd: 'gece' }));
+  assert.equal(k.ajan.ad, 'Gece');
   o.temizle();
 });
 
