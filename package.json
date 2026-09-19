@@ -1,0 +1,24 @@
+{
+  "name": "suru",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Suru - yari-ozerk Claude Code ajan yonetimi",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "panel": "node src/server.js",
+    "canli": "node src/live.js",
+    "index": "node src/indexer.js",
+    "rapor": "node src/report.js",
+    "test": "node --test",
+    "kota": "node src/kota-cli.js",
+    "gece": "node src/rapor-cli.js",
+    "yetki-canli": "node src/yetki-canli.js",
+    "sinav": "node src/sinav.js"
+  },
+  "optionalDependencies": {
+    "node-pty": "^1.1.0"
+  }
+}

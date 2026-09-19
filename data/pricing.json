@@ -1,0 +1,26 @@
+{
+  "guncellendi": "2026-06-24",
+  "kaynak": "Anthropic resmi fiyat listesi. Milyon token basina USD.",
+  "cache": {
+    "yazma5dk": 1.25,
+    "yazma1saat": 2.0,
+    "okuma": 0.1
+  },
+  "ucretsiz": ["<synthetic>"],
+  "notlar": {
+    "claude-fable-5-1": "Fiyat dogrulanmadi; fable-5 ile ayni varsayildi."
+  },
+  "modeller": {
+    "claude-fable-5":             { "in": 10, "out": 50 },
+    "claude-fable-5-1":           { "in": 10, "out": 50 },
+    "claude-opus-5":              { "in": 5,  "out": 25 },
+    "claude-opus-4-8":            { "in": 5,  "out": 25 },
+    "claude-opus-4-7":            { "in": 5,  "out": 25 },
+    "claude-opus-4-6":            { "in": 5,  "out": 25 },
+    "claude-sonnet-5":            { "in": 3,  "out": 15,
+      "tanitim": { "bitis": "2026-09-01T00:00:00Z", "in": 2, "out": 10 } },
+    "claude-sonnet-4-6":          { "in": 3,  "out": 15 },
+    "claude-haiku-4-5":           { "in": 1,  "out": 5 },
+    "claude-haiku-4-5-20251001":  { "in": 1,  "out": 5 }
+  }
+}

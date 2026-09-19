@@ -1,0 +1,249 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1e1a15">
+<title>Sürü · Terminal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+<style>
+/* Insan mudahale kanali. Otomasyonun yerine gecmez - "bir sey ters gitti,
+   elimi sokmam lazim" kanali. */
+:root{
+  --zemin:#16130f; --yuzey:#1e1a15; --cizgi:#2c261e;
+  --metin:#f2ece3; --metin-orta:#b3a798; --metin-sonuk:#857a6d;
+  --vurgu:#f2764a; --seni:#6fc27c; --takildi:#f0705f; --onay:#f2b23c;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--zemin);color:var(--metin);
+  font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:11px 16px;
+  background:var(--yuzey);border-bottom:1px solid var(--cizgi)}
+h1{font-size:14px;font-weight:700;letter-spacing:.14em;color:var(--vurgu)}
+a{color:var(--metin-sonuk);text-decoration:none;font-size:13px}
+a:hover{color:var(--metin)}
+#durum{margin-left:auto;font-size:12.5px;color:var(--metin-sonuk)}
+.uyari{margin:14px 16px;padding:11px 13px;border-left:2px solid var(--onay);
+  background:#42310f;color:var(--metin-orta);font-size:12.5px}
+.uyari b{color:var(--onay)}
+#kap{display:flex;gap:14px;padding:0 16px 16px;align-items:flex-start;flex-wrap:wrap}
+#yan{flex:0 0 250px;min-width:220px}
+#liste{margin-bottom:12px}
+.t-satir{display:flex;gap:6px;margin-bottom:6px}
+.t-satir.aktif .t{border-color:var(--vurgu)}
+.t{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:9px 11px;
+  border:1px solid var(--cizgi);border-radius:5px;cursor:pointer;background:var(--yuzey);
+  color:var(--metin);font:inherit;text-align:left}
+.t:focus-visible,.sil:focus-visible{outline:2px solid var(--vurgu);outline-offset:1px}
+.t .nokta{width:8px;height:8px;border-radius:50%;background:var(--metin-sonuk);flex:none}
+.t.calisiyor .nokta{background:var(--seni)}
+.t .ad{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sil{flex:none;color:var(--metin-sonuk);font-size:12px;padding:2px 9px;font-weight:400}
+form{display:flex;flex-direction:column;gap:7px}
+input{font:inherit;font-size:13px;padding:8px 10px;border-radius:5px;
+  border:1px solid var(--cizgi);background:var(--zemin);color:var(--metin);width:100%}
+button{font:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:5px;
+  border:1px solid var(--cizgi);background:var(--yuzey);color:var(--metin);cursor:pointer}
+button.ana{background:var(--vurgu);border-color:var(--vurgu);color:#16130f}
+#araclar{display:flex;gap:7px;margin-bottom:9px}
+#ekran{flex:1;min-width:380px;border:1px solid var(--cizgi);border-radius:6px;
+  background:#12100d;padding:8px;min-height:420px}
+#sonuc{font-size:12.5px;color:var(--seni);margin-top:7px;min-height:17px}
+#sonuc.kotu{color:var(--takildi)}
+</style>
+
+<header>
+  <h1>SÜRÜ · TERMİNAL</h1>
+  <a href="/">← panel</a>
+  <a href="/ofis">ofis</a>
+  <span id="durum"></span>
+</header>
+
+<div class="uyari">
+  <b>Bu sayfa makinede gerçek komut çalıştırır.</b> Sürü süreçleri kilitlemez,
+  kum havuzu kurmaz — burada yazdığın şey doğrudan çalışır. Ajan yönetimi için
+  bunu kullanma; bu kanal "bir şey ters gitti, elimi sokmam lazım" içindir.
+</div>
+
+<div id="kap">
+  <div id="yan">
+    <div id="araclar">
+      <button id="baslat" class="ana">Başlat</button>
+      <button id="durdur">Durdur</button>
+    </div>
+    <div id="liste"></div>
+    <form id="ekle">
+      <input name="ad" placeholder="terminal adı" required>
+      <input name="cwd" placeholder="klasör (tam yol)" required>
+      <input name="komut" placeholder="komut (varsayılan: claude)">
+      <button type="submit">Ekle</button>
+    </form>
+    <div id="sonuc"></div>
+  </div>
+  <div id="ekran"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var sonuc=$('sonuc'), durum=$('durum');
+var secili=null, kaynak=null, terminaller=[];
+
+function bildir(metin,kotu){
+  sonuc.className=kotu?'kotu':'';
+  sonuc.textContent=metin||'';
+}
+
+if(typeof Terminal!=='undefined'){
+  // xterm CDN'den geliyor: tek sayfa icin 250KB'i depoya koymaya degmez.
+} else {
+  bildir('xterm yuklenemedi (internet yok mu?). Terminal calismaz.',true);
+}
+
+var term=null, fit=null;
+function terminalKur(){
+  if(term||typeof Terminal==='undefined')return;
+  term=new Terminal({
+    fontSize:13, cursorBlink:true, scrollback:5000,
+    fontFamily:'ui-monospace,SFMono-Regular,Consolas,monospace',
+    theme:{background:'#12100d',foreground:'#f2ece3',cursor:'#f2764a',
+      selectionBackground:'#40241a'}
+  });
+  if(typeof FitAddon!=='undefined'){ fit=new FitAddon.FitAddon(); term.loadAddon(fit); }
+  term.open($('ekran'));
+  if(fit)fit.fit();
+  // Tus vurusu dogrudan surece gider. Her vurus icin ayri istek yerine
+  // kisa bir tamponla topluyoruz: yerel agda bile gereksiz istek acmayalim.
+  var kuyruk='', zaman=null;
+  term.onData(function(d){
+    kuyruk+=d;
+    if(zaman)return;
+    zaman=setTimeout(function(){
+      var g=kuyruk; kuyruk=''; zaman=null;
+      if(secili)gonder('/pty/yaz',{id:secili,veri:g},function(){});
+    },12);
+  });
+  window.addEventListener('resize',boyutBildir);
+}
+
+function boyutBildir(){
+  if(!term||!fit||!secili)return;
+  fit.fit();
+  gonder('/pty/boyut',{id:secili,cols:term.cols,rows:term.rows},function(){});
+}
+
+function gonder(yol,govde,geri){
+  var x=new XMLHttpRequest();
+  x.open('POST',yol+location.search,true);
+  x.setRequestHeader('Content-Type','application/json');
+  x.onload=function(){
+    var c={}; try{ c=JSON.parse(x.responseText); }catch(e){}
+    geri(x.status===200,c.hata||('sunucu '+x.status),c);
+  };
+  x.onerror=function(){ geri(false,'baglanti yok',{}); };
+  x.send(JSON.stringify(govde));
+}
+
+function getir(yol,geri){
+  var x=new XMLHttpRequest();
+  x.open('GET',yol+location.search,true);
+  x.onload=function(){
+    var c={}; try{ c=JSON.parse(x.responseText); }catch(e){}
+    geri(x.status===200,c);
+  };
+  x.send();
+}
+
+function listeCiz(){
+  var kap=$('liste');
+  while(kap.firstChild)kap.removeChild(kap.firstChild);
+  if(!terminaller.length){
+    var b=document.createElement('div');
+    b.style.cssText='color:var(--metin-sonuk);font-size:12.5px;padding:6px 0';
+    b.textContent='Terminal yok. Aşağıdan ekle.';
+    kap.appendChild(b);
+  }
+  terminaller.forEach(function(t){
+    // Gercek buton: onclick'li div klavyeyle ulasilmiyor ve erisilebilirlik
+    // agacinda gorunmuyor. Ic ice buton gecersiz oldugu icin "sil" kardes.
+    var satir=document.createElement('div');
+    satir.className='t-satir'+(secili===t.id?' aktif':'');
+
+    var d=document.createElement('button');
+    d.type='button';
+    d.className='t'+(t.calisiyor?' calisiyor':'');
+    d.setAttribute('aria-pressed',secili===t.id?'true':'false');
+    var n=document.createElement('span'); n.className='nokta'; d.appendChild(n);
+    var a=document.createElement('span'); a.className='ad';
+    a.textContent=t.ad; d.appendChild(a);
+    d.title=t.cwd+' · '+(t.komut||'claude');
+    d.onclick=function(){ sec(t.id); };
+    satir.appendChild(d);
+
+    var sl=document.createElement('button');
+    sl.type='button'; sl.className='sil'; sl.textContent='sil';
+    sl.setAttribute('aria-label',t.ad+' terminalini sil');
+    sl.onclick=function(){
+      gonder('/pty/sil',{id:t.id},function(ok,h){ ok?yenile():bildir(h,true); });
+    };
+    satir.appendChild(sl);
+    kap.appendChild(satir);
+  });
+
+  var s=null;
+  terminaller.forEach(function(t){ if(t.id===secili)s=t; });
+  durum.textContent=s?(s.ad+' · '+(s.calisiyor?('calisiyor, pid '+s.pid):'durmus')):'';
+}
+
+function sec(id){
+  if(secili===id)return;
+  secili=id;
+  terminalKur();
+  if(term)term.reset();
+  if(kaynak){ kaynak.close(); kaynak=null; }
+  kaynak=new EventSource('/pty/akis'+location.search+(location.search?'&':'?')+'id='+encodeURIComponent(id));
+  kaynak.addEventListener('veri',function(e){
+    if(!term)return;
+    try{ term.write(JSON.parse(e.data)); }catch(err){}
+  });
+  kaynak.addEventListener('cikis',function(e){
+    if(term)term.write('\\r\\n[surec bitti, cikis kodu '+JSON.parse(e.data)+']\\r\\n');
+    yenile();
+  });
+  listeCiz();
+  boyutBildir();
+}
+
+function yenile(){
+  getir('/pty/liste',function(ok,c){
+    if(!ok){ bildir(c.hata||'terminal ucu kapali',true); return; }
+    terminaller=c.terminaller||[];
+    listeCiz();
+  });
+}
+
+$('baslat').onclick=function(){
+  if(!secili){ bildir('once bir terminal sec',true); return; }
+  terminalKur();
+  bildir('baslatiliyor...');
+  gonder('/pty/baslat',{id:secili,cols:(term?term.cols:100),rows:(term?term.rows:30)},
+    function(ok,h){ ok?(bildir(''),yenile()):bildir(h,true); });
+};
+$('durdur').onclick=function(){
+  if(!secili)return;
+  gonder('/pty/durdur',{id:secili},function(ok,h){ ok?yenile():bildir(h,true); });
+};
+$('ekle').onsubmit=function(e){
+  e.preventDefault();
+  var f=e.target;
+  gonder('/pty/ekle',{ad:f.ad.value.trim(),cwd:f.cwd.value.trim(),
+    komut:f.komut.value.trim()||'claude'},function(ok,h){
+    if(ok){ f.ad.value=''; bildir('eklendi'); yenile(); }
+    else bildir(h,true);
+  });
+};
+
+yenile();
+})();
+</script>
