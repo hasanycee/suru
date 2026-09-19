@@ -852,18 +852,18 @@ elle koşma, raporu kodu okuyarak notlama).
 
 | Proje | İş | Profil |
 |---|---|---|
-| FinancialDedective | `logic.py` sağlamlaştırma + unittest | serbest + döngü |
+| FinancialDetective | `logic.py` sağlamlaştırma + unittest | serbest + döngü |
 | LiveDub | `config.py` / `gender.py` birim testleri | serbest + döngü |
 | HRTech | kod incelemesi (`hr_vector_db/` gizli) | gözlemci |
 
-**Bağımsız kontroller de sınandı:** FinancialDedective için yazılan 7 uç durum kontrolü
+**Bağımsız kontroller de sınandı:** FinancialDetective için yazılan 7 uç durum kontrolü
 orijinal `logic.py`'de 1/7 geçti (altı hatanın hepsi gerçek: `bool[index]` çökmesi, boş
 regex her satırı şüpheli yapıyor, `c++` regex hatası, boş açıklama normal sayılıyor,
 kural dosyası yokken ve başka klasörden çalışınca `None[...]` çökmesi).
 
 **Birinci tur bulguları:**
 
-- *FinancialDedective:* ajan 6 hatanın 5'ini düzeltti (bağımsız kontrol 6/7). Kalan
+- *FinancialDetective:* ajan 6 hatanın 5'ini düzeltti (bağımsız kontrol 6/7). Kalan
   hata (hafta sonu yasağı kapalıyken çökme) ajanın **kendi yazdığı testte** yakalandı ve
   doğrulama kaldı — ama rapor "hafta sonu yasağı aktif/pasif ✅" diyordu. Ajan testi
   çalıştıramadığı için iddia doğrulanmamıştı.
@@ -897,7 +897,7 @@ kural dosyası yokken ve başka klasörden çalışınca `None[...]` çökmesi).
 
 **İkinci tur (doğrulama döngüsü açıkken):**
 
-- *FinancialDedective — tamam.* Taze yapıcı hafta sonu hatasını düzeltti ama yazdığı yeni
+- *FinancialDetective — tamam.* Taze yapıcı hafta sonu hatasını düzeltti ama yazdığı yeni
   bir test kaldı; döngü doğrulama çıktısıyla 2. turu açtı, 27 testin hepsi geçti, denetçi
   geçirdi. Bağımsız kontrol **7/7**. Toplam $0.84 (iki kampanya). Yalnızca `logic.py` ve
   `tests/` değişti.
