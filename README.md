@@ -3,6 +3,10 @@
 Yarı-özerk Claude Code ajan yönetimi. Ajanlar kendi kararlarını verir; sana sadece
 kritik ve mimari kararlar gelir.
 
+![Sürü paneli: oturumlar, kim seni bekliyor, Telegram komut satırı](docs/panel.png)
+
+![Ofis görünümü: her ajan bir masada, durumu renginden okunur](docs/ofis.png)
+
 Şu an **Faz 5 sürüyor**: doğrulama, kademeli başlatma ve sürü hafızası ayakta: temel sağlam, bildirim çalışıyor, ajanların adı var. Bugün elindeki iş,
 `~/.claude/projects/**/*.jsonl` kayıtlarını okuyup hangi oturumun çalıştığını,
 hangisinin seni beklediğini ve neye kaç para gittiğini göstermek.
